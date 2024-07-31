@@ -1,0 +1,31 @@
+params:
+  - name: k8sNamespace
+    type: string
+  - name: imageName
+    type: string
+  - name: appName
+    type: string
+
+modules:
+  - name: github.com/qmonus/official-cloud-native-adapters
+    revision: v0.32.2
+
+designPatterns:
+ ## Infrastructure resources
+  - pattern: qmonus.net/adapter/official/kubernetes/deployment/simple
+    params:
+      k8sNamespace: $(params.k8sNamespace)
+      imageName:    $(params.imageName)
+      appName: $(params.appName)
+      port: "8080"
+      replicas: "1"
+  - pattern: qmonus.net/adapter/official/kubernetes/sample:loadbalancer 
+    params:
+      k8sNamespace: $(params.k8sNamespace)
+      appName: $(params.appName)
+      port: "8080"
+  
+  ## CI/CD pipelines
+  - pattern: qmonus.net/adapter/official/pipeline/build:buildkitGcp
+  - pattern: qmonus.net/adapter/official/pipeline/deploy:simple
+  - pattern: qmonus.net/adapter/official/pipeline/sample:resolveIPAddress
