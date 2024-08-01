@@ -1,0 +1,46 @@
+apiVersion: vs.axis-dev.io/v1
+kind: AssemblyLine
+metadata:
+  name: github-trending-api-deploy
+spec:
+  params:
+    - name: gitRevision
+      description: ""
+  results:
+    - name: ipAddress
+      value: " $(stages.resolve-ip.results.ipAddress)"
+  artifacts: []
+  stages:
+    - name: build
+      spec:
+        deployment:
+          app: github-trending-api
+          name: demo-gcp
+        params:
+          - name: gitRevision
+            value: $(inputs.gitRevision)
+          - name: imageTag
+            value: $(inputs.gitRevision)
+        pipeline: github-trending-api-build
+    - name: deploy
+      spec:
+        deployment:
+          app: github-trending-api
+          name: demo-gcp
+        params:
+          - name: gitRevision
+            value: $(inputs.gitRevision)
+          - name: imageName
+            value: $(stages.build.results.imageFullNameTag)
+        pipeline: github-trending-api-deploy
+      runAfter:
+        - build
+    - name: resolve-ip
+      spec:
+        deployment:
+          app: github-trending-api
+          name: demo-gcp
+        params: []
+        pipeline: github-trending-api-resolve-ip-address-after-deploy
+      runAfter:
+        - deploy
